@@ -1,0 +1,8 @@
+# pycache
+__pycache__/
+
+# Firebase cache
+.firebase/
+
+# Firebase config
+key.json
