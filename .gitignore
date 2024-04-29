@@ -1,8 +1,5 @@
 # pycache
 __pycache__/
 
-# Firebase cache
-.firebase/
-
-# Firebase config
+# Supabase config
 key.json
