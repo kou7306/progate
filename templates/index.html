@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Address Data</title>
+  </head>
+  <body>
+    <h1>Address Data</h1>
+
+    {% for item in data %} {% if item['image-url'] %}
+    <h2>{{ item.address }}</h2>
+    <div><img src="{{ item['image-url'] }}" alt="" /></div>
+    {% endif %} {% endfor %}
+  </body>
+</html>
