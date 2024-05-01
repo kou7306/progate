@@ -17,4 +17,4 @@ docker compose up
 ```
 
 ## デプロイ先
-[[progate.onrender.com](https://progate.onrender.com)](https://progate-421904.an.r.appspot.com/)
+https://progate-421904.an.r.appspot.com/
