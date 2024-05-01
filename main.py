@@ -24,5 +24,5 @@ async def read_root(request: Request):
     # 最短ルート探索
     root = make_root.make_root(response)
     print("作成したルート: ", root)
-    # print(response.data)
+    print(response.data)
     return templates.TemplateResponse("index.html", context)
