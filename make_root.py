@@ -68,7 +68,7 @@ def greedy(locations):
 
 def make_json_for_root(best_root):
     """
-    {"root": [{"id": i, "order": j} ..... ]}
+    return {"root": [{"id": i, "order": j} ..... ]}
     """
     root_list = []
     for i in range(len(best_root)):
