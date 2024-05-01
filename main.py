@@ -22,3 +22,7 @@ async def read_root(request: Request):
     context = {"request": request, "data": response.data}
     print(response.data)
     return templates.TemplateResponse("index.html", context)
+
+@app.post("/")
+def narrow_down():
+    return
