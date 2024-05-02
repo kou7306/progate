@@ -1,68 +1,75 @@
-from supabase import create_client, Client
 import json
 import math
 
-with open('key.json') as f:
-    key_data = json.load(f)
-
-url: str = key_data['supabase_url']
-key: str = key_data['supabase_key']
-supabase: Client = create_client(url, key)
+ONE_DEGREE = 111.321 # [km]
+WALK_SPEED = 4 # [km/h]
+DRIVE_SPEED = 34 # [km/h]
+# パラメータ 小さい < --------------------------------> 大きい
+# ランキング上位を選択 <--------------------> 距離が近い方を選択
+# y = moving_itme * (rank + parameter)
+PARAMETER = [-1, -0.1, 0, 0.1, 1] 
 
 def get_longitude_latitude_from_table(response):
     """
-    return {id: [longitude, latitude]}
+    return {id: [longitude, latitude, rank, staying_time], ...}
     """
 
-    item_d = {}
+    item_dic = {}
     for item in response.data:
-        #print(item)
         id = item["id"]
         longitude = item["longitude"]
         latitude = item["latitude"]
-        item_d[id] =  [longitude, latitude]
-    return item_d
+        rank = item["rank"]
+        staying_time = item["staying_time"]
+        item_dic[id] =  [longitude, latitude, rank, staying_time]
+    return item_dic
 
-def distance(location1, location2):
-    return math.sqrt((location1[0]-location2[0])**2 + (location1[1]-location2[1])**2)
+def calc_weight(location1, location2, rank, parameter):
+    moving_time = calc_moving_time(location1, location2)
+    weight = moving_time * (rank + parameter)
+    return weight
+
+def calc_moving_time(location1, location2):
+    distance = math.sqrt((location1[0]-location2[0])**2 + (location1[1]-location2[1])**2)
+    moving_time = (distance * ONE_DEGREE) / WALK_SPEED
+    return moving_time
 
 def greedy(locations):
     """
     return order list 
     """
     N = len(locations)
-    dist = [[0] * N for i in range(N)]
-    #print(locations[1])
-    #print(locations[N])
+    moving_time = [[0] * N for i in range(N)]
+    weight = [[0] * N for i in range(N)]
 
     for i in range(N):
         for j in range(N):
-            dist[i][j] = dist[j][i] = distance(locations[i+1],locations[j+1])
-    #print(dist)
+            moving_time[i][j] = moving_time[j][i] = calc_moving_time(locations[i+1],locations[j+1])
+            weight[i][j] = calc_weight(locations[i+1],locations[j+1], rank=locations[j+1][2], parameter=PARAMETER[0])
+            weight[j][i] = calc_weight(locations[i+1],locations[j+1], rank=locations[i+1][2], parameter=PARAMETER[0])
 
-    min_sum_distance = float('inf')
+    min_sum_time_including_weight = float('inf')
     best_root = []
     for i in range(N):
-        tmp_sum_distance = 0
+        tmp_sum_time_including_weight = 0
+        total_time = 0
         current_location = i
         unvisited_locations = set(range(N))
         unvisited_locations.remove(i)
 
         root = [current_location]
-        #print(root)
         while unvisited_locations:
-            next_location = min(unvisited_locations, key=lambda location: dist[current_location][location])
+            next_location = min(unvisited_locations, key=lambda location: weight[current_location][location])
             unvisited_locations.remove(next_location)
             root.append(next_location)
-            tmp_sum_distance += dist[current_location][next_location]
+            tmp_sum_time_including_weight += weight[current_location][next_location]
+            staying_time = locations[next_location+1][3]
+            total_time += calc_moving_time(locations[current_location+1], locations[next_location+1]) + staying_time
             current_location = next_location
         
-        #print("root ", i, " :", root)
-        #print(tmp_sum_distance)
-
-        if tmp_sum_distance < min_sum_distance:
+        if tmp_sum_time_including_weight < min_sum_time_including_weight:
             best_root = root
-            min_sum_distance = tmp_sum_distance
+            min_sum_time_including_weight = tmp_sum_time_including_weight
 
     return best_root
 
