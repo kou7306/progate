@@ -23,12 +23,16 @@ async def read_root(request: Request):
     #print(response.data)
     return templates.TemplateResponse("index.html", context)
 
-@app.post("/")
-async def narrow_down():
+@app.post("/get_narrow")
+async def narrow_down(request: Request):
+    data=await request.json()
+    lon=data.get("longitude")
+    lat=data.get("latitude")
+    """
     main_place=(139.405457,35.694031)#仮置き
     lon,lat=main_place
+    """
     n=0.1
-    print(main_place)
         # テーブル名と条件を指定
     table_name = 'address'
 
@@ -49,4 +53,4 @@ async def narrow_down():
     print(result)
     print("(距離,id)",lis)
 
-    return result
+    return json.dumps(result)#jsonに変換
