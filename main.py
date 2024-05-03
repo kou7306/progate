@@ -92,12 +92,12 @@ async def main2rank(request: Request):
     lat=data.get("latitude")
 
     #セッション（一時的に記憶）に登録
-    id = session_data.get_data("id")
-    lon = session_data.get_data("lon")
-    lat = session_data.get_data("lat")
+    session_data.set_data("id",id)
+    session_data.set_data("lon",lon) 
+    session_data.set_data("lat",lat) 
     if not id or not lon or not lat:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found.")
     
 
     #/make-rankingにリダイレクト(クエリパラメータとして、最も行きたい場所の緯度経度を埋め込む)
-    return RedirectResponse(url=f"/make-ranking?lon={session_data.lon}&lat={session_data.lat}")
+    return RedirectResponse(url=f"/make-ranking?lon={lon}&lat={lat}")
