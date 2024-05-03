@@ -5,6 +5,15 @@ from fastapi.templating import Jinja2Templates
 from supabase import create_client, Client
 import json
 
+from fastapi import FastAPI, HTTPException, Depends, Request, Form, status
+from fastapi.responses import RedirectResponse
+from typing import Optional
+from pydantic import BaseModel
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi import APIRouter, Request, Form, Cookie, Response
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+
 with open('key.json') as f:
     key_data = json.load(f)
 
@@ -14,6 +23,26 @@ supabase: Client = create_client(url, key)
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+
+#sessionの準備
+security = HTTPBasic()
+
+class Item(BaseModel):
+    id: str
+    lon: float
+    lat: float
+
+class SessionData:
+    def __init__(self):
+        self.data = {}
+
+    def set_data(self, key, value):
+        self.data[key] = value
+
+    def get_data(self, key):
+        return self.data.get(key)
+
+session_data = SessionData()
 
 
 @app.get("/")
@@ -54,3 +83,21 @@ async def narrow_down(request: Request):
     print("(距離,id)",lis)
 
     return json.dumps(result)#jsonに変換
+
+@app.post("/main_place")
+async def main2rank(request: Request):
+    data=await request.json()
+    id=data.get("id")
+    lon=data.get("longitude")
+    lat=data.get("latitude")
+
+    #セッション（一時的に記憶）に登録
+    id = session_data.get_data("id")
+    lon = session_data.get_data("lon")
+    lat = session_data.get_data("lat")
+    if not id or not lon or not lat:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found.")
+    
+
+    #/make-rankingにリダイレクト(クエリパラメータとして、最も行きたい場所の緯度経度を埋め込む)
+    return RedirectResponse(url=f"/make-ranking?lon={session_data.lon}&lat={session_data.lat}")
