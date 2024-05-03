@@ -1,9 +1,12 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from urllib import request
+from fastapi import FastAPI, Depends, HTTPException, status,Request
+from starlette.middleware.sessions import SessionMiddleware
 from fastapi.templating import Jinja2Templates
 from supabase import create_client, Client
 import json
+from fastapi.responses import RedirectResponse
+
+
 
 with open('key.json') as f:
     key_data = json.load(f)
@@ -14,6 +17,9 @@ supabase: Client = create_client(url, key)
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+# #sessionの準備
+app.add_middleware(SessionMiddleware, secret_key="topsecret")
+
 
 
 @app.get("/")
@@ -54,3 +60,22 @@ async def narrow_down(request: Request):
     print("(距離,id)",lis)
 
     return json.dumps(result)#jsonに変換
+
+@app.post("/main_place")
+async def main2rank(request: Request):
+    data=await request.json()
+    id=data.get("id")
+    lon=data.get("longitude")
+    lat=data.get("latitude")
+
+    #セッション（一時的に記憶）に登録
+    request.session["id"] = id
+    request.session["lon"] = lon
+    request.session["lat"] = lat
+    if not id or not lon or not lat:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found.")
+    
+
+    #/make-rankingにリダイレクト(クエリパラメータとして、最も行きたい場所の緯度経度を埋め込む)
+    return RedirectResponse(url=f"/make-ranking?lon={lon}&lat={lat}")
+
