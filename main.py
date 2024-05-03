@@ -82,7 +82,7 @@ async def narrow_down(request: Request):
     print(result)
     print("(距離,id)",lis)
 
-    return json.dumps(result)#jsonに変換
+    return json.dumps(lis)#jsonに変換
 
 # メインの場所を受け取って、リダイレクト
 @app.post("/main_place")
