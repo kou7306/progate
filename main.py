@@ -7,8 +7,14 @@ import json
 from fastapi.responses import RedirectResponse
 from dotenv import load_dotenv
 import os
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
+# CORS 設定
+origins = [
+    "https://progate-hackathon-frontend.vercel.app",
+    "http://localhost:3000",
+]
 
 
 with open('key.json') as f:
@@ -19,6 +25,14 @@ key: str = key_data['supabase_key']
 supabase: Client = create_client(url, key)
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
+
 templates = Jinja2Templates(directory="templates")
 # #sessionの準備
 app.add_middleware(SessionMiddleware, secret_key="topsecret")
@@ -35,9 +49,15 @@ async def read_root(request: Request):
 # 候補の場所を渡す
 @app.post("/get_narrow")
 async def narrow_down(request: Request):
-    data=await request.json()
-    lon=data.get("longitude")
-    lat=data.get("latitude")
+    
+    response=await request.json()
+    print(response) 
+    lon=response['data']['longitude']
+    lat=response['data']['latitude']
+    lon = float(lon)
+    lat = float(lat)
+
+    print(lon,lat)
     """
     main_place=(139.405457,35.694031)#仮置き
     lon,lat=main_place
@@ -46,7 +66,7 @@ async def narrow_down(request: Request):
         # テーブル名と条件を指定
     table_name = 'address'
 
-        # Supabaseのデータベースからデータを取得
+    # Supabaseのデータベースからデータを取得
     response = supabase.table(table_name).select('id', 'longitude', 'latitude').execute()
     print(response,type(response))
     #data,count = response
@@ -57,9 +77,8 @@ async def narrow_down(request: Request):
 
     lis=[]
     for row in data:
-        lis.append((((row['longitude'] - lon)**2 + (row['latitude'] - lat)**2),row['id']))
-
-    print()
+        # lis.append((((row['longitude'] - lon)**2 + (row['latitude'] - lat)**2),row['id']))
+        lis.append(row['id'])
     print(result)
     print("(距離,id)",lis)
 
