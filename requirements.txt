@@ -3,3 +3,4 @@ uvicorn
 supabase
 jinja2
 itsdangerous
+python-dotenv

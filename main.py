@@ -5,7 +5,10 @@ from fastapi.templating import Jinja2Templates
 from supabase import create_client, Client
 import json
 from fastapi.responses import RedirectResponse
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 
 with open('key.json') as f:
@@ -21,7 +24,7 @@ templates = Jinja2Templates(directory="templates")
 app.add_middleware(SessionMiddleware, secret_key="topsecret")
 
 
-
+# test
 @app.get("/")
 async def read_root(request: Request):
     response = supabase.table('address').select("*").execute()
@@ -29,6 +32,7 @@ async def read_root(request: Request):
     #print(response.data)
     return templates.TemplateResponse("index.html", context)
 
+# 候補の場所を渡す
 @app.post("/get_narrow")
 async def narrow_down(request: Request):
     data=await request.json()
@@ -61,6 +65,7 @@ async def narrow_down(request: Request):
 
     return json.dumps(result)#jsonに変換
 
+# メインの場所を受け取って、リダイレクト
 @app.post("/main_place")
 async def main2rank(request: Request):
     data=await request.json()
@@ -75,7 +80,7 @@ async def main2rank(request: Request):
     if not id or not lon or not lat:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found.")
     
-
+    url = os.getenv("FRONTEND_URL")
     #/make-rankingにリダイレクト(クエリパラメータとして、最も行きたい場所の緯度経度を埋め込む)
-    return RedirectResponse(url=f"/make-ranking?lon={lon}&lat={lat}")
+    return RedirectResponse(url=f"{url}?lon={lon}&lat={lat}")
 
