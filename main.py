@@ -1,18 +1,21 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from urllib import request
+from fastapi import FastAPI, Depends, HTTPException, status,Request
+from starlette.middleware.sessions import SessionMiddleware
 from fastapi.templating import Jinja2Templates
 from supabase import create_client, Client
 import json
-
-from fastapi import FastAPI, HTTPException, Depends, Request, Form, status
 from fastapi.responses import RedirectResponse
-from typing import Optional
-from pydantic import BaseModel
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from fastapi import APIRouter, Request, Form, Cookie, Response
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
+from dotenv import load_dotenv
+import os
+from fastapi.middleware.cors import CORSMiddleware
+
+load_dotenv()
+# CORS 設定
+origins = [
+    "https://progate-hackathon-frontend.vercel.app",
+    "http://localhost:3000",
+]
+
 
 with open('key.json') as f:
     key_data = json.load(f)
@@ -22,29 +25,20 @@ key: str = key_data['supabase_key']
 supabase: Client = create_client(url, key)
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
+
 templates = Jinja2Templates(directory="templates")
-
-#sessionの準備
-security = HTTPBasic()
-
-class Item(BaseModel):
-    id: str
-    lon: float
-    lat: float
-
-class SessionData:
-    def __init__(self):
-        self.data = {}
-
-    def set_data(self, key, value):
-        self.data[key] = value
-
-    def get_data(self, key):
-        return self.data.get(key)
-
-session_data = SessionData()
+# #sessionの準備
+app.add_middleware(SessionMiddleware, secret_key="topsecret")
 
 
+# test
 @app.get("/")
 async def read_root(request: Request):
     response = supabase.table('address').select("*").execute()
@@ -52,11 +46,18 @@ async def read_root(request: Request):
     #print(response.data)
     return templates.TemplateResponse("index.html", context)
 
+# 候補の場所を渡す
 @app.post("/get_narrow")
 async def narrow_down(request: Request):
-    data=await request.json()
-    lon=data.get("longitude")
-    lat=data.get("latitude")
+    
+    response=await request.json()
+    print(response) 
+    lon=response['data']['longitude']
+    lat=response['data']['latitude']
+    lon = float(lon)
+    lat = float(lat)
+
+    print(lon,lat)
     """
     main_place=(139.405457,35.694031)#仮置き
     lon,lat=main_place
@@ -65,7 +66,7 @@ async def narrow_down(request: Request):
         # テーブル名と条件を指定
     table_name = 'address'
 
-        # Supabaseのデータベースからデータを取得
+    # Supabaseのデータベースからデータを取得
     response = supabase.table(table_name).select('id', 'longitude', 'latitude').execute()
     print(response,type(response))
     #data,count = response
@@ -76,14 +77,14 @@ async def narrow_down(request: Request):
 
     lis=[]
     for row in data:
-        lis.append((((row['longitude'] - lon)**2 + (row['latitude'] - lat)**2),row['id']))
-
-    print()
+        # lis.append((((row['longitude'] - lon)**2 + (row['latitude'] - lat)**2),row['id']))
+        lis.append(row['id'])
     print(result)
     print("(距離,id)",lis)
 
-    return json.dumps(result)#jsonに変換
+    return json.dumps(lis)#jsonに変換
 
+# メインの場所を受け取って、リダイレクト
 @app.post("/main_place")
 async def main2rank(request: Request):
     data=await request.json()
@@ -92,12 +93,13 @@ async def main2rank(request: Request):
     lat=data.get("latitude")
 
     #セッション（一時的に記憶）に登録
-    session_data.set_data("id",id)
-    session_data.set_data("lon",lon) 
-    session_data.set_data("lat",lat) 
+    request.session["id"] = id
+    request.session["lon"] = lon
+    request.session["lat"] = lat
     if not id or not lon or not lat:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found.")
     
-
+    url = os.getenv("FRONTEND_URL")
     #/make-rankingにリダイレクト(クエリパラメータとして、最も行きたい場所の緯度経度を埋め込む)
-    return RedirectResponse(url=f"/make-ranking?lon={lon}&lat={lat}")
+    return RedirectResponse(url=f"{url}?lon={lon}&lat={lat}")
+
