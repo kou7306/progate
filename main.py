@@ -132,7 +132,7 @@ async def rank2route(request: Request):
 async def read_root(request: Request):
     response = supabase.table('address').select("*").execute()
     context = {"request": request, "data": response.data}
-    # 入れるデータの例:[2,4,12,42,11]
+    # 入れるデータの例:[2,4,12,18,11]
     # 出力されるデータの例:[{"order":1,"id":2,"longitude":139.405457,"latitude":35.694031},{"order":2,"id":4,"longitude":139.405457,"latitude":35.694031},{"order":3,"id":12,"longitude":139.405457,"latitude":35.694031},{"order":4,"id":42,"longitude":139.405457,"latitude":35.694031},{"order":5,"id":11,"longitude":139.405457,"latitude":35.694031}]
     # 最短ルート探索
     #root = make_root.make_root(response)
