@@ -113,56 +113,48 @@ async def narrow_down(request: Request):
 
 
 #ランキングの配列を受け取ってmap-rootにリダイレクト
-@app.post("/accept_rank")
-async def rank2route(request: Request):
-    data=await request.json()
-    #rank=json.loads(data)
-
-    #アルゴリズム?
-    
-    #map-rootにリダイレクト
-    #url = os.getenv("FRONTEND_URL")
-    return data #RedirectResponse(url=f"{url}map-root/")
-
-
-
-
 
 @app.post("/make_root")
 async def read_root(request: Request):
-    response = supabase.table('address').select("*").execute()
-    context = {"request": request, "data": response.data}
+    items = await request.json()
+    # リクエストボディからデータを取得
+
+    number_items = list(map(int, items))
+
+    print("number_list: ", number_items)
+    
     # 入れるデータの例:[2,4,12,42,11]
     # 出力されるデータの例:[{"order":1,"id":2,"longitude":139.405457,"latitude":35.694031},{"order":2,"id":4,"longitude":139.405457,"latitude":35.694031},{"order":3,"id":12,"longitude":139.405457,"latitude":35.694031},{"order":4,"id":42,"longitude":139.405457,"latitude":35.694031},{"order":5,"id":11,"longitude":139.405457,"latitude":35.694031}]
     # 最短ルート探索
-    #root = make_root.make_root(response)
+    root = make_root.make_root(number_items)
+    print("root: ", root)
 
-    root=[
-        {
-        'number': 1, 
-        'address': "東京都台東区上野公園９−８３", 
-        'lat': 35.7181172305638, 
-        'lng': 139.773761356751 
-        },
-        {
-        'number': 2, 
-        'address': "東京都江東区豊洲６丁目６−１", 
-        'lat': 35.6461239098884, 
-        'lng': 139.784210093853 
-        },
-        {
-        'number': 3, 
-        'address': "東京都中央区佃２丁目１", 
-        'lat': 35.6726742311275, 
-        'lng': 139.786473177283 
-        },
-        {
-        'number': 4, 
-        'address': "東京都葛飾区柴又７丁目", 
-        'lat': 35.7619694606295, 
-        'lng': 139.876150947625 
-        }
-    ]
+    # root=[
+    #     {
+    #     'number': 1, 
+    #     'address': "東京都台東区上野公園９−８３", 
+    #     'lat': 35.7181172305638, 
+    #     'lng': 139.773761356751 
+    #     },
+    #     {
+    #     'number': 2, 
+    #     'address': "東京都江東区豊洲６丁目６−１", 
+    #     'lat': 35.6461239098884, 
+    #     'lng': 139.784210093853 
+    #     },
+    #     {
+    #     'number': 3, 
+    #     'address': "東京都中央区佃２丁目１", 
+    #     'lat': 35.6726742311275, 
+    #     'lng': 139.786473177283 
+    #     },
+    #     {
+    #     'number': 4, 
+    #     'address': "東京都葛飾区柴又７丁目", 
+    #     'lat': 35.7619694606295, 
+    #     'lng': 139.876150947625 
+    #     }
+    # ]
     return {"root": root}
 
 
