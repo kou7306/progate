@@ -103,3 +103,16 @@ async def main2rank(request: Request):
     #/make-rankingにリダイレクト(クエリパラメータとして、最も行きたい場所の緯度経度を埋め込む)
     return RedirectResponse(url=f"{url}?lon={lon}&lat={lat}")
 
+
+#ランキングの配列を受け取ってmap-rootにリダイレクト
+@app.post("/accept_rank")
+async def rank2route(request: Request):
+    data=await request.json()
+    #rank=json.loads(data)
+
+    #アルゴリズム?
+    
+    #map-rootにリダイレクト
+    url = os.getenv("FRONTEND_URL")
+    return RedirectResponse(url=f"{url}map-root/")
+
