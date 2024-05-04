@@ -128,7 +128,7 @@ async def rank2route(request: Request):
 
 
 
-@app.get("/make_root")
+@app.post("/make_root")
 async def read_root(request: Request):
     response = supabase.table('address').select("*").execute()
     context = {"request": request, "data": response.data}
@@ -163,9 +163,7 @@ async def read_root(request: Request):
         'lng': 139.876150947625 
         }
     ]
-    print("作成したルート: ", root)
-    # print(response.data)
-    return json.dumps(root)
+    return {"root": root}
 
 
 """
