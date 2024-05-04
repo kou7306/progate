@@ -18,8 +18,7 @@ import make_root
 load_dotenv()
 # CORS 設定
 origins = [
-    "https://progate-hackathon-frontend.vercel.app",
-    "http://localhost:3000",
+    "*"
 ]
 
 
@@ -43,7 +42,7 @@ app.add_middleware(
 
 templates = Jinja2Templates(directory="templates")
 # #sessionの準備
-app.add_middleware(SessionMiddleware, secret_key="topsecret")
+app.add_middleware(SessionMiddleware, secret_key="111122222333topsecret")
 
 
 # test
@@ -57,13 +56,14 @@ async def read_root(request: Request):
 # 候補の場所を渡す
 @app.post("/get_narrow")
 async def narrow_down(request: Request):
-    
     response=await request.json()
     print(response) 
     lon=response['data']['longitude']
     lat=response['data']['latitude']
     lon = float(lon)
     lat = float(lat)
+
+
 
     print(lon,lat)
     """
@@ -116,12 +116,15 @@ async def narrow_down(request: Request):
 
 @app.post("/make_root")
 async def read_root(request: Request):
-    items = await request.json()
+    response = await request.json()
     # リクエストボディからデータを取得
 
-    number_items = list(map(int, items))
+    number_items = list(map(int, response.items))
+    lon = float(response.lon)
+    lat = float(response.lat)
 
     print("number_list: ", number_items)
+
     
     # 入れるデータの例:[2,4,12,42,11]
     # 出力されるデータの例:[{"order":1,"id":2,"longitude":139.405457,"latitude":35.694031},{"order":2,"id":4,"longitude":139.405457,"latitude":35.694031},{"order":3,"id":12,"longitude":139.405457,"latitude":35.694031},{"order":4,"id":42,"longitude":139.405457,"latitude":35.694031},{"order":5,"id":11,"longitude":139.405457,"latitude":35.694031}]
