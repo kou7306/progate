@@ -21,8 +21,11 @@ templates = Jinja2Templates(directory="templates")
 async def read_root(request: Request):
     response = supabase.table('address').select("*").execute()
     context = {"request": request, "data": response.data}
+
     # 最短ルート探索
-    root = make_root.make_root(response)
+    tmp_rank_list = [4,3,6,2]
+    root = make_root.make_root(tmp_rank_list)
+    
     print("作成したルート: ", root)
     print(response.data)
     return templates.TemplateResponse("index.html", context)
