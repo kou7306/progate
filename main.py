@@ -113,6 +113,6 @@ async def rank2route(request: Request):
     #アルゴリズム?
     
     #map-rootにリダイレクト
-    url = os.getenv("FRONTEND_URL")
-    return RedirectResponse(url=f"{url}map-root/")
+    #url = os.getenv("FRONTEND_URL")
+    return data #RedirectResponse(url=f"{url}map-root/")
 
