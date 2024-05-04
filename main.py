@@ -23,6 +23,8 @@ origins = [
 ]
 
 
+
+
 with open('key.json') as f:
     key_data = json.load(f)
 
@@ -133,7 +135,73 @@ async def read_root(request: Request):
     # 入れるデータの例:[2,4,12,42,11]
     # 出力されるデータの例:[{"order":1,"id":2,"longitude":139.405457,"latitude":35.694031},{"order":2,"id":4,"longitude":139.405457,"latitude":35.694031},{"order":3,"id":12,"longitude":139.405457,"latitude":35.694031},{"order":4,"id":42,"longitude":139.405457,"latitude":35.694031},{"order":5,"id":11,"longitude":139.405457,"latitude":35.694031}]
     # 最短ルート探索
-    root = make_root.make_root(response)
+    #root = make_root.make_root(response)
+
+    root=[
+        {
+        'number': 1, 
+        'address': "東京都台東区上野公園９−８３", 
+        'lat': 35.7181172305638, 
+        'lng': 139.773761356751 
+        },
+        {
+        'number': 2, 
+        'address': "東京都江東区豊洲６丁目６−１", 
+        'lat': 35.6461239098884, 
+        'lng': 139.784210093853 
+        },
+        {
+        'number': 3, 
+        'address': "東京都中央区佃２丁目１", 
+        'lat': 35.6726742311275, 
+        'lng': 139.786473177283 
+        },
+        {
+        'number': 4, 
+        'address': "東京都葛飾区柴又７丁目", 
+        'lat': 35.7619694606295, 
+        'lng': 139.876150947625 
+        }
+    ]
     print("作成したルート: ", root)
     # print(response.data)
-    return templates.TemplateResponse("index.html", context)
+    return json.dumps(root)
+
+#テストデータのテスト
+"""
+root=[
+        {
+        'number': 1, 
+        'address': "東京都台東区上野公園９−８３", 
+        'lat': 35.7181172305638, 
+        'lng': 139.773761356751 
+        },
+        {
+        'number': 2, 
+        'address': "東京都江東区豊洲６丁目６−１", 
+        'lat': 35.6461239098884, 
+        'lng': 139.784210093853 
+        },
+        {
+        'number': 3, 
+        'address': "東京都中央区佃２丁目１", 
+        'lat': 35.6726742311275, 
+        'lng': 139.786473177283 
+        },
+        {
+        'number': 4, 
+        'address': "東京都葛飾区柴又７丁目", 
+        'lat': 35.7619694606295, 
+        'lng': 139.876150947625 
+        }
+
+    ]
+print("作成したルート: ", root)
+print(type(root))
+print(root[1])
+print(type(root[1]))
+rootj=json.dumps(root)
+print(rootj)
+print(type(rootj))
+
+"""
