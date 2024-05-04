@@ -9,15 +9,14 @@ url: str = key_data['supabase_url']
 key: str = key_data['supabase_key']
 supabase: Client = create_client(url, key)
 
-def get_longitude_latitude_from_table():
+def get_longitude_latitude_from_table(response):
     """
     return {id: [longitude, latitude]}
     """
-    response = supabase.table('address').select("*").execute()
 
     item_d = {}
     for item in response.data:
-        print(item)
+        #print(item)
         id = item["id"]
         longitude = item["longitude"]
         latitude = item["latitude"]
@@ -33,13 +32,13 @@ def greedy(locations):
     """
     N = len(locations)
     dist = [[0] * N for i in range(N)]
-    print(locations[1])
-    print(locations[N])
+    #print(locations[1])
+    #print(locations[N])
 
     for i in range(N):
         for j in range(N):
             dist[i][j] = dist[j][i] = distance(locations[i+1],locations[j+1])
-    print(dist)
+    #print(dist)
 
     min_sum_distance = float('inf')
     best_root = []
@@ -50,7 +49,7 @@ def greedy(locations):
         unvisited_locations.remove(i)
 
         root = [current_location]
-        print(root)
+        #print(root)
         while unvisited_locations:
             next_location = min(unvisited_locations, key=lambda location: dist[current_location][location])
             unvisited_locations.remove(next_location)
@@ -58,8 +57,8 @@ def greedy(locations):
             tmp_sum_distance += dist[current_location][next_location]
             current_location = next_location
         
-        print("root ", i, " :", root)
-        print(tmp_sum_distance)
+        #print("root ", i, " :", root)
+        #print(tmp_sum_distance)
 
         if tmp_sum_distance < min_sum_distance:
             best_root = root
@@ -78,8 +77,8 @@ def make_json_for_root(best_root):
     
     with open("root.json","w") as file:
         json.dump({"root": root_list}, file)
-    return root_list
+    return {"root": root_list}
 
-if __name__ == '__main__':
-    best_root_list = greedy(get_longitude_latitude_from_table())
-    print(make_json_for_root(best_root_list))
+def make_root(response):
+    best_root_list = greedy(get_longitude_latitude_from_table(response))
+    return make_json_for_root(best_root_list)
