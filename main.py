@@ -149,17 +149,7 @@ async def read_root(request: Request):
     # 入れるデータの例:[2,4,12,42,11]
     # 出力されるデータの例:[{"order":1,"id":2,"longitude":139.405457,"latitude":35.694031},{"order":2,"id":4,"longitude":139.405457,"latitude":35.694031},{"order":3,"id":12,"longitude":139.405457,"latitude":35.694031},{"order":4,"id":42,"longitude":139.405457,"latitude":35.694031},{"order":5,"id":11,"longitude":139.405457,"latitude":35.694031}]
     # 最短ルート探索
-    
-    # ユーザーの入力
-    main_place = (139.7677370730788,35.684187995344296) # 仮置き
-    lon, lat = main_place
-    main_place_staying_time = 2 # [h]
-    drive = True # 車か徒歩か
-    limit_time = 8 # [h]
-
-    main_place_list = [lon, lat, main_place_staying_time]
-
-    root = make_root.make_root(number_items, main_place_list, drive, limit_time)
+    root = make_root.make_root(number_items)
     print("root: ", root)
 
     # root=[
