@@ -178,7 +178,7 @@ async def read_root(request: Request):
     return {"root": root}
 
 
-
+"""
 main_place=(139.7677370730788,35.684187995344296)#仮置き
 lon,lat=main_place
 tra=1
@@ -224,7 +224,7 @@ if len(result)>=k:
 #print("(距離,id)",lis)
 print('res_kai',result)
 print(len(result))
-
+"""
 
 #テストデータのテスト
 """
