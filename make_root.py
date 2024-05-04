@@ -23,8 +23,10 @@ def get_longitude_latitude_from_table(rank_list) -> dict:
 
     item_dict = {}
     rank = 1
+
     for item in response.data:
         id = item["id"]
+     
         if id in rank_list:
             longitude = item["longitude"]
             latitude = item["latitude"]
@@ -103,14 +105,16 @@ def make_order_to_json(item_dict: dict, best_root: list) -> list:
 
 def make_root(id_list: list):
     item_dict = get_longitude_latitude_from_table(id_list)
-    best_root = try_all_combinations(item_dict, id_list)
+    moving_time = make_moving_time_list(item_dict)
+    best_root = try_all_combinations(item_dict, id_list, moving_time)
     rout_list = make_order_to_json(item_dict, best_root)
     return rout_list
 
 if __name__ == '__main__':
     id_list = [2,4,12,18,11,8,1,13,5,10]
     item_dict = get_longitude_latitude_from_table(id_list)
+    
     moving_time = make_moving_time_list(item_dict)
+    
     best_root = try_all_combinations(item_dict, id_list, moving_time)
     rout_list = make_order_to_json(item_dict, best_root)
-    print(rout_list)
