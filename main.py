@@ -8,6 +8,12 @@ from fastapi.responses import RedirectResponse
 from dotenv import load_dotenv
 import os
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+import json
+import make_root
 
 load_dotenv()
 # CORS 設定
@@ -85,23 +91,23 @@ async def narrow_down(request: Request):
     return json.dumps(lis)#jsonに変換
 
 # メインの場所を受け取って、リダイレクト
-@app.post("/main_place")
-async def main2rank(request: Request):
-    data=await request.json()
-    id=data.get("id")
-    lon=data.get("longitude")
-    lat=data.get("latitude")
+# @app.post("/main_place")
+# async def main2rank(request: Request):
+#     data=await request.json()
+#     id=data.get("id")
+#     lon=data.get("longitude")
+#     lat=data.get("latitude")
 
-    #セッション（一時的に記憶）に登録
-    request.session["id"] = id
-    request.session["lon"] = lon
-    request.session["lat"] = lat
-    if not id or not lon or not lat:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found.")
+#     #セッション（一時的に記憶）に登録
+#     request.session["id"] = id
+#     request.session["lon"] = lon
+#     request.session["lat"] = lat
+#     if not id or not lon or not lat:
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data not found.")
     
-    url = os.getenv("FRONTEND_URL")
-    #/make-rankingにリダイレクト(クエリパラメータとして、最も行きたい場所の緯度経度を埋め込む)
-    return RedirectResponse(url=f"{url}?lon={lon}&lat={lat}")
+#     url = os.getenv("FRONTEND_URL")
+#     #/make-rankingにリダイレクト(クエリパラメータとして、最も行きたい場所の緯度経度を埋め込む)
+#     return RedirectResponse(url=f"{url}?lon={lon}&lat={lat}")
 
 
 #ランキングの配列を受け取ってmap-rootにリダイレクト
@@ -116,3 +122,18 @@ async def rank2route(request: Request):
     #url = os.getenv("FRONTEND_URL")
     return data #RedirectResponse(url=f"{url}map-root/")
 
+
+
+
+
+@app.get("/make_root")
+async def read_root(request: Request):
+    response = supabase.table('address').select("*").execute()
+    context = {"request": request, "data": response.data}
+    # 入れるデータの例:[2,4,12,42,11]
+    # 出力されるデータの例:[{"order":1,"id":2,"longitude":139.405457,"latitude":35.694031},{"order":2,"id":4,"longitude":139.405457,"latitude":35.694031},{"order":3,"id":12,"longitude":139.405457,"latitude":35.694031},{"order":4,"id":42,"longitude":139.405457,"latitude":35.694031},{"order":5,"id":11,"longitude":139.405457,"latitude":35.694031}]
+    # 最短ルート探索
+    root = make_root.make_root(response)
+    print("作成したルート: ", root)
+    # print(response.data)
+    return templates.TemplateResponse("index.html", context)
