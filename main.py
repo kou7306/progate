@@ -70,45 +70,27 @@ async def narrow_down(request: Request):
     main_place=(139.405457,35.694031)#仮置き
     lon,lat=main_place
     """
-    #print("a")
-    #print((139.7980772673309-139.82533008204277)**2+(35.680485755979404-35.704111613579826)**2)
-    n=0.006 #徒歩2時間くらい
-
+    n=0.1
         # テーブル名と条件を指定
     table_name = 'address'
 
     # Supabaseのデータベースからデータを取得
     response = supabase.table(table_name).select('id', 'longitude', 'latitude').execute()
-    #print(response,type(response))
+    print(response,type(response))
     #data,count = response
     data=response.data
-    #print(data)
-            # 条件を満たすIDを取得
+    print(data)
+        # 条件を満たすIDを取得
     result = [row['id'] for row in data if ((row['longitude'] - lon)**2 + (row['latitude'] - lat)**2 <= n)]
 
+    lis=[]
+    for row in data:
+        # lis.append((((row['longitude'] - lon)**2 + (row['latitude'] - lat)**2),row['id']))
+        lis.append(row['id'])
+    print(result)
+    print("(距離,id)",lis)
 
-    print('res',result)
-    print(len(result))
-
-    #候補地が多いとき
-    k =30  #候補地の数の限界値
-    if len(result)>=k:
-        lis=[]
-        for row in data:
-            #print(row)
-            lis.append((((row['longitude'] - lon)**2 + (row['latitude'] - lat)**2),row['id']))
-        #print(lis)
-        lis.sort()
-        #print(lis)
-        res=[]
-        for i in lis[:k]:
-            res.append(i[1])
-        result=res
-    #print("(距離,id)",lis)
-    print('res_kai',result)
-    print(len(result))
-
-    return json.dumps(result)#jsonに変換
+    return json.dumps(lis)#jsonに変換
 
 # メインの場所を受け取って、リダイレクト
 # @app.post("/main_place")

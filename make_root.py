@@ -1,6 +1,12 @@
 from supabase import create_client, Client
+import itertools
 import json
 import math
+
+ONE_DEGREE = 111.321 # [km]
+WALK_SPEED = 4 # [km/h]
+DRIVE_SPEED = 34 # [km/h]
+LIMIT_TIME = 8 #[h]
 
 with open('key.json') as f:
     key_data = json.load(f)
@@ -8,77 +14,103 @@ with open('key.json') as f:
 url: str = key_data['supabase_url']
 key: str = key_data['supabase_key']
 supabase: Client = create_client(url, key)
+response = supabase.table('address').select("*").execute()
 
-def get_longitude_latitude_from_table(response):
+def get_longitude_latitude_from_table(rank_list) -> dict:
     """
-    return {id: [longitude, latitude]}
+    return {rank: [id, longitude, latitude, staying_time], ...}
     """
 
-    item_d = {}
+    item_dict = {}
+    rank = 1
     for item in response.data:
-        #print(item)
         id = item["id"]
-        longitude = item["longitude"]
-        latitude = item["latitude"]
-        item_d[id] =  [longitude, latitude]
-    return item_d
+        if id in rank_list:
+            longitude = item["longitude"]
+            latitude = item["latitude"]
+            staying_time = item["staying_time"]
+            item_dict[rank] =  [id, longitude, latitude, staying_time]
+            rank += 1
 
-def distance(location1, location2):
-    return math.sqrt((location1[0]-location2[0])**2 + (location1[1]-location2[1])**2)
+    return item_dict
 
-def greedy(locations):
-    """
-    return order list 
-    """
-    N = len(locations)
-    dist = [[0] * N for i in range(N)]
-    #print(locations[1])
-    #print(locations[N])
+def calc_moving_time(rank1: list, rank2: list) -> float:
+    distance = math.sqrt((rank1[1]-rank2[1])**2 + (rank1[2]-rank2[2])**2)
+    moving_time = (distance * ONE_DEGREE) * 1.5 / DRIVE_SPEED
+    return moving_time
+
+def make_moving_time_list(item_dict: dict) -> list:
+    N = len(item_dict)
+    moving_time = [[0] * N for i in range(N)]
 
     for i in range(N):
         for j in range(N):
-            dist[i][j] = dist[j][i] = distance(locations[i+1],locations[j+1])
-    #print(dist)
+            moving_time[i][j] = moving_time[j][i] = calc_moving_time(item_dict[i+1], item_dict[j+1])
+    return moving_time
 
-    min_sum_distance = float('inf')
+def greedy(item_dict: dict, rank_list: list, moving_time: list) -> list:
+    """
+    return order list of rank
+    ex: [2,1,5...] の時は、rank=2,1,5の順に回る
+    """
+
+    min_sum_time = LIMIT_TIME
     best_root = []
-    for i in range(N):
-        tmp_sum_distance = 0
-        current_location = i
-        unvisited_locations = set(range(N))
-        unvisited_locations.remove(i)
+    
+    for rank in rank_list:
+        current_rank = rank
+        tmp_sum_time = item_dict[current_rank][3]
+        unvisited_ranks = set(rank_list)
+        unvisited_ranks.remove(rank)
 
-        root = [current_location]
-        #print(root)
-        while unvisited_locations:
-            next_location = min(unvisited_locations, key=lambda location: dist[current_location][location])
-            unvisited_locations.remove(next_location)
-            root.append(next_location)
-            tmp_sum_distance += dist[current_location][next_location]
-            current_location = next_location
-        
-        #print("root ", i, " :", root)
-        #print(tmp_sum_distance)
+        root = [current_rank]
+        while unvisited_ranks:
+            next_rank = min(unvisited_ranks, key=lambda rank: moving_time[current_rank-1][rank-1])
+            unvisited_ranks.remove(next_rank)
+            root.append(next_rank)
+            staying_time = item_dict[next_rank][3]
+            tmp_sum_time += moving_time[current_rank-1][next_rank-1] + staying_time
+            current_rank = next_rank
 
-        if tmp_sum_distance < min_sum_distance:
+        if tmp_sum_time < min_sum_time:
             best_root = root
-            min_sum_distance = tmp_sum_distance
-
+            min_sum_time = tmp_sum_time
+        
     return best_root
 
-def make_json_for_root(best_root):
-    """
-    {"root": [{"id": i, "order": j} ..... ]}
-    """
-    root_list = []
-    for i in range(len(best_root)):
-        json_order = {"id": best_root[i]+1, "order": i+1}
-        root_list.append(json_order)
-    
-    with open("root.json","w") as file:
-        json.dump({"root": root_list}, file)
-    return {"root": root_list}
+def try_all_combinations(item_dict: dict, id_list: list, moving_time:list) -> list:
+    best_root = []
+    max_rank_point = 0
+    for i in range(1, len(id_list)+1):
+        for combination in itertools.combinations(enumerate(id_list),i):
+            rank_combination_list = [(rank+1) for rank, _ in combination]
+            sum_rank_point = sum([(10-rank) for rank, _ in combination])
 
-def make_root(response):
-    best_root_list = greedy(get_longitude_latitude_from_table(response))
-    return make_json_for_root(best_root_list)
+            tmp_best_root = greedy(item_dict, rank_combination_list, moving_time)
+            if tmp_best_root and max_rank_point < sum_rank_point:
+                max_rank_point = sum_rank_point
+                best_root = tmp_best_root
+    return best_root
+
+def make_order_to_json(item_dict: dict, best_root: list) -> list:
+    rout_list = []
+    order = 1
+    for rank in best_root:
+        json_order = {"order": order, "id": item_dict[rank][0], "longitude": item_dict[rank][1], "latitude": item_dict[rank][2]}
+        rout_list.append(json_order)
+        order += 1
+    return rout_list
+
+def make_root(id_list: list):
+    item_dict = get_longitude_latitude_from_table(id_list)
+    best_root = try_all_combinations(item_dict, id_list)
+    rout_list = make_order_to_json(item_dict, best_root)
+    return rout_list
+
+if __name__ == '__main__':
+    id_list = [2,4,12,18,11,8,1,13,5,10]
+    item_dict = get_longitude_latitude_from_table(id_list)
+    moving_time = make_moving_time_list(item_dict)
+    best_root = try_all_combinations(item_dict, id_list, moving_time)
+    rout_list = make_order_to_json(item_dict, best_root)
+    print(rout_list)
