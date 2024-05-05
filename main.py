@@ -63,7 +63,7 @@ async def narrow_down(request: Request):
     lon = float(lon)
     lat = float(lat)
 
-    tra=response['data']['transportation']#徒歩は0,車は１
+    tra=int(response['data']['transportation'])#徒歩は0,車は１
 
     print(lon,lat)
     """
@@ -137,11 +137,12 @@ async def narrow_down(request: Request):
 @app.post("/make_root")
 async def read_root(request: Request):
     response = await request.json()
+    # error
     # リクエストボディからデータを取得
+    print("response: ", response)
 
-    number_items = list(map(int, response.items))
-    lon = float(response.lon)
-    lat = float(response.lat)
+    number_items = list(map(int, response['items']))
+
 
     print("number_list: ", number_items)
 
