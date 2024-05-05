@@ -60,10 +60,9 @@ async def narrow_down(request: Request):
     print(response) 
     lon=response['data']['longitude']
     lat=response['data']['latitude']
+    tra=int(response['data']['transportation'])#徒歩は0,車は１
     lon = float(lon)
     lat = float(lat)
-
-    tra=response['data']['transportation']#徒歩は0,車は１
 
     print(lon,lat)
     """
@@ -139,7 +138,7 @@ async def read_root(request: Request):
     response = await request.json()
     # リクエストボディからデータを取得
 
-    number_items = list(map(int, response.items))
+    number_items = list(map(int, response['items']))
     lon = float(response.lon)
     lat = float(response.lat)
 
