@@ -115,7 +115,7 @@ def make_root(id_list: list, main_place_list: list, drive: bool, limit_time: flo
 
 if __name__ == '__main__':
     id_list = [12,14,30,18,11,8,21,13,7,10]
-
+    
     # ユーザーの入力
     main_place = (139.7677370730788,35.684187995344296) # 仮置き
     lon, lat = main_place
