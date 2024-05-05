@@ -93,7 +93,7 @@ async def narrow_down(request: Request):
     print(len(result))
 
     #候補地が多いとき
-    k =30  #候補地の数の限界値
+    k =20  #候補地の数の限界値
     if len(result)>=k:
         lis=[]
         for row in data:
@@ -136,11 +136,22 @@ async def narrow_down(request: Request):
 @app.post("/make_root")
 async def read_root(request: Request):
     response = await request.json()
+    print("respose",response)
     # リクエストボディからデータを取得
 
     number_items = list(map(int, response['items']))
-    lon = float(response.lon)
-    lat = float(response.lat)
+    lon = float(response["lon"])
+    lat = float(response["lat"])
+    time = float(response["time"])
+    name = response["name"]
+    transportation = int(response["transportation"])
+    mainPlaceTime = float(response["mainPlaceTime"])
+
+    if transportation == 1:
+        drive = True
+    else:   
+        drive = False
+
 
     print("number_list: ", number_items)
 
@@ -150,14 +161,16 @@ async def read_root(request: Request):
     # 最短ルート探索
 
     # ユーザーの入力
-    main_place_name = "東京タワー"
-    main_place_staying_time = 2 # [h]
-    drive = True # 車か徒歩か
-    limit_time = 8 # [h]
+    # main_place_name = "東京タワー"
+    # main_place_staying_time = 2 # [h]
+    # drive = True # 車か徒歩か
+    # limit_time = 8 # [h]
 
-    main_place_list = [lon, lat, main_place_staying_time, main_place_name]
+    
 
-    root = make_root.make_root(number_items, main_place_list, drive, limit_time)
+    main_place_list = [lon, lat, mainPlaceTime, name]
+
+    root = make_root.make_root(number_items, main_place_list, drive, time)
     print("root: ", root)
 
     # root=[
